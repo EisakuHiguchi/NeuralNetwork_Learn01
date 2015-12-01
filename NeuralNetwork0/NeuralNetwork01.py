@@ -15,8 +15,9 @@ class Node:
 	def update(self):
 		for w in self.wire:
 			if w.nodes[1] == self:
-				w.update(activateFunc(w.w * self.value + self.bias))
+				#w.update(activateFunc(w.w * self.value + self.bias))
 				#w.update(activateFunc(self.value))
+				w.update(self.value)
 
 	def setWire(self, node):
 		for n in node:
@@ -30,7 +31,8 @@ class Node:
 	def output(self, node):
 		for w in self.wire:
 			if w.nodes[1]  == node:
-				return activateFunc(w.w * self.value + self.bias)
+				#return activateFunc(w.w * self.value + self.bias)
+				return w.w * self.value + self.bias
 
 	def initInput(self, inval):
 		self.value = inval
@@ -40,6 +42,8 @@ class Node:
 		for w in self.wire:
 			if w.nodes[1] == self:
 				self.value += w.nodes[0].output(self)
+		if self.state == "inner":
+			self.value = activateFunc(self.value)
 
 	def __cmp__(self, other):
 		return self.id - other.id
@@ -67,15 +71,15 @@ class Wire:
 
 def activateFunc(u):
 	try:
-		res =  1 / (1 + math.exp(u))
+		res =  1 / (1 + math.exp(-u))
 	except:
 		res = 0
 	return res
 	
 def updateNode(num):
 	f = openData("t10k-images.idx3-ubyte")
-	for i in range(17):
-		f.read(28*28*(num-1))
+	buf = f.read(16) # ヘッダ部分の読み込み
+	f.read(28*28*(num-1))
 	for n in nodes:
 		if n.state == "input":
 			buf = f.read(1)
@@ -93,11 +97,12 @@ def getLabel(num):
 	labelFile = open("t10-labels.txt");
 	for i in range(num):
 		label = labelFile.readline()
+	labelFile.close()
 	return int(label)
 
 def openData(filename):
 	f = open(filename,'rb')
-	f.read(16) # ヘッダ部分の読み込み
+	#f.read(16) # ヘッダ部分の読み込み
 	return f
 
 def outputprint():
@@ -112,13 +117,15 @@ def outputprint():
 
 input = 2
 outputNum = 4
-rate = 0.2
+rate = 0.03
 inputRow = 28
 inputCol = 28
 layer = 3
 innerNum = 50
 inputNum = inputRow * inputCol
 output = 0
+
+loopnum = 100
 
 nodes = []
 
@@ -151,7 +158,7 @@ f.close()
 	#for w in i.wire:
 	#	print("	",w.nodes[0].id, w.nodes[1].id)
 
-for i in range(300):
+for i in range(loopnum):
 	print("loop " , i +1)
 	updateNode(1)
 	outputprint()
