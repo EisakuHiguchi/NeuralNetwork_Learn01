@@ -1,22 +1,19 @@
-import math
+﻿import math
 import random
 
 inputnum = 3
 hiddennum = 3
 outputnum = 1
 
-teachnum = 500 # loop num
+teachnum = 20000 # loop num
 
 eta = 0.9 # learning rate
-alfa = 0.9 # innertia rate
+alfa = 0.1 # innertia rate
 
 nodes = []
 wires = []
 teach = [0,1,1,0]
 input = [[0,0,1],[0,1,1],[1,0,1],[1,1,1]]
-
-mod_output = 0
-
 
 class node:
 	def __init__(self, id, state, **kwargs):
@@ -27,7 +24,7 @@ class node:
 		return super().__init__(**kwargs)
 
 	def activateFunc(self, value):
-		return 1 / (1 + math.exp(-value))
+		return 1.0 / (1.0 + math.exp(-1 * value))
 
 	def output(self):
 		if self.state != "input":
@@ -42,9 +39,15 @@ class node:
 
 	def modification(self, teach_c):
 		if self.state == "output":
-			return self.value * (1 - self.value) * (teach[teach_c] - self.value)
+			return self.value * (1.0 - self.value) * (teach[teach_c] - self.value)
 		if self.state == "hidden":
-			return self.value * (1 - self.value) * modification_output(teach_c)
+			return self.value * (1.0 - self.value) * modification_output(teach_c, self)
+
+	def update(self, teach_c):
+		for w in wires:
+			if w.nodes[0].id == self.id:
+				w.w += alfa * w.nodes[1].modification(teach_c) * self.value
+
 
 class wire:
 	def __init__(self, node1 , node2, **kwargs):
@@ -57,25 +60,29 @@ class wire:
 		return super().__init__(**kwargs)
 
 	def output(self):
-		return self.w * nodes[1].value
+		return self.w * self.nodes[0].value
 
 	def update(self, teach_c):
-		temp = eta * self.nodes[1].modification(teach_c) * nodes[0].value + alfa * self.dw
+		#temp = eta * self.nodes[1].modification(teach_c) * self.nodes[0].value + alfa * self.dw
+		
+		temp = alfa * self.nodes[1].modification(teach_c) * self.nodes[0].value
 		self.w += temp
 		self.dw = temp
 
 
 
-def modification_output(teach_c):
+def modification_output(teach_c, node):
 	sum = 0
 	for w in wires:
-		if w.nodes[1].state == "output":
+		if w.nodes[1].state == "output" and w.nodes[0].id == node.id:
 			sum += w.w * w.nodes[1].modification(teach_c)
 	return sum
 
 def update(teach_c):
-	for w in reversed(wires):
-		w.update(teach_c)
+	#for w in reversed(wires):
+	#	w.update(teach_c)
+	for n in reversed(nodes):
+		n.update(teach_c)
 
 def input_output(teach_c):
 	cnt = 0
@@ -90,16 +97,18 @@ def input_output(teach_c):
 		n.output()
 
 
+
 def checkend():
 	N = len(input)
 	temp = 0
 	for i in range(N):
+		input_output(i)
 		for n in nodes:
 			if n.state == "output":
-				input_output(i)
-				temp += (teach[i] - n.value)**2
+				temp += math.pow((teach[i] - n.value),2)
 
-	temp = (temp / N)
+	#temp = (temp / N)
+	temp *= 0.5
 	print("Error", temp)
 	if temp <= 0.001:
 		#before_e = temp / N
@@ -123,7 +132,9 @@ def createNodes():
 		for n2 in nodes:
 			if n.state == "input" and n2.state == "hidden":
 				wire(n,n2)
-			elif n.state == "hidden" and n2.state == "output":
+	for n in nodes:
+		for n2 in nodes:
+			if n.state == "hidden" and n2.state == "output":
 				wire(n,n2)
 
 
