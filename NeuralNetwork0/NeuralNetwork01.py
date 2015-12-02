@@ -15,9 +15,12 @@ class Node:
 	def update(self):
 		for w in self.wire:
 			if w.nodes[1] == self:
-				#w.update(activateFunc(w.w * self.value + self.bias))
-				w.update(activateFunc(self.value))
-				#w.update(self.value)
+				if self.state == "inner":
+					w.update2(activateFunc(self.value))
+				else:
+					#w.update(activateFunc(w.w * self.value + self.bias))
+					w.update(activateFunc(self.value))
+					#w.update(self.value)
 
 	def setWire(self, node):
 		for n in node:
@@ -69,7 +72,7 @@ class Wire:
 	def update2(self, val):
 		n1 = self.nodes[1]
 		n0 = self.nodes[0]
-		self.w = self.w - rate * (n0.value - n1.value * self.w) * self.w
+		self.w = self.w - rate * (n0.value - n1.value * self.w) * n1.value
 
 
 # function
@@ -122,7 +125,7 @@ def outputprint():
 
 input = 2
 outputNum = 4
-rate = 0.03
+rate = 0.3
 inputRow = 28
 inputCol = 28
 layer = 3
@@ -130,7 +133,7 @@ innerNum = 50
 inputNum = inputRow * inputCol
 output = 0
 
-loopnum = 5
+loopnum = 50
 
 nodes = []
 
