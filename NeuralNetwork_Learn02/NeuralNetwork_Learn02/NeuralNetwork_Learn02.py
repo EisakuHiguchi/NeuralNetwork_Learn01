@@ -5,7 +5,7 @@ inputnum = 3
 hiddennum = 3
 outputnum = 1
 
-teachnum = 20000 # loop num
+#teachnum = 20000 # loop num
 
 eta = 0.9 # learning rate
 alfa = 0.1 # innertia rate
@@ -96,9 +96,7 @@ def input_output(teach_c):
 	for n in nodes:
 		n.output()
 
-
-
-def checkend():
+def getError():
 	N = len(input)
 	temp = 0
 	for i in range(N):
@@ -109,11 +107,7 @@ def checkend():
 
 	#temp = (temp / N)
 	temp *= 0.5
-	print("Error", temp)
-	if temp <= 0.001:
-		#before_e = temp / N
-		return True
-	return False
+	return temp
 
 
 def createNodes():
@@ -142,6 +136,9 @@ def debug_output():
 	for n in nodes:
 		print(n.id, n.value)
 
+def debug_inout(teach_c):
+	print("in " , input[teach_c] , " out ", nodes[len(nodes)-1].value , " Error " , getError())
+
 
 def result():
 	for i in range(len(teach)):
@@ -156,17 +153,16 @@ def result():
 def main():
 	createNodes()
 	result()
-	for i in range(teachnum):
-		print("loop" , i)
+	#for i in range(teachnum):
+	while(True):
+		#print("loop" , i)
 		cnt = random.randint(0,len(teach) - 1)
 		input_output(cnt)
 		update(cnt)
-		debug_output()
-		if checkend():
+		#debug_output()
+		debug_inout()
+		if getError() < 0.0001:
 			return 0
 		
-
-
-
 main()
 result()
