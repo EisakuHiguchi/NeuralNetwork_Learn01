@@ -6,6 +6,7 @@ hiddennum = 3
 outputnum = 1
 
 #teachnum = 20000 # loop num
+error = 0.001
 
 eta = 0.9 # learning rate
 alfa = 0.1 # innertia rate
@@ -153,7 +154,7 @@ def result():
 def main():
 	createNodes()
 	result()
-	#j = 0
+	j = 0
 	#for i in range(teachnum):
 	while(True):
 		#print("loop" , i)
@@ -162,9 +163,9 @@ def main():
 		update(cnt)
 		#debug_output()
 		debug_inout(cnt)
-		#j += 1
-		if getError() < 0.0001:
-			#print ("loop: " , j)
+		j += 1
+		if getError() < error:
+			print ("loop: " , j)
 			return 0
 		
 main()
