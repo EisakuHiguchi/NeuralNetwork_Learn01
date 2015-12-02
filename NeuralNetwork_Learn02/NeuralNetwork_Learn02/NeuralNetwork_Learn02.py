@@ -153,6 +153,7 @@ def result():
 def main():
 	createNodes()
 	result()
+	#j = 0
 	#for i in range(teachnum):
 	while(True):
 		#print("loop" , i)
@@ -160,8 +161,10 @@ def main():
 		input_output(cnt)
 		update(cnt)
 		#debug_output()
-		debug_inout()
+		debug_inout(cnt)
+		#j += 1
 		if getError() < 0.0001:
+			#print ("loop: " , j)
 			return 0
 		
 main()
