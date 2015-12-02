@@ -13,40 +13,39 @@ class Node:
 		return super().__init__(**kwargs)
 
 	def update(self):
+		temp = 0
+		if self.state == "output":
+			for w in self.wire:
+				if w.nodes[1] == self:
+					temp = w.back_output()
+		
 		for w in self.wire:
 			if w.nodes[1] == self:
 				if self.state == "inner":
-					w.update2(activateFunc(self.value))
-				else:
-					#w.update(activateFunc(w.w * self.value + self.bias))
-					w.update(activateFunc(self.value))
-					#w.update(self.value)
+					w.update(temp)
+				elif self.state == "output":
+					w.update(0)
 
 	def setWire(self, node):
 		for n in node:
 			w = Wire(self)
 			w.setNode(n)
 			self.wire.append(w)
+			wires.append(w)
 
 	def setWireinst(self, wire):
 		self.wire.append(wire)
 
-	def output(self, node):
-		for w in self.wire:
-			if w.nodes[1]  == node:
-				#return activateFunc(w.w * self.value + self.bias)
-				return w.w * self.value + self.bias
+	def output(self):
+		if self.state != "input":
+			put = 0
+			for w in self.wire:
+				put += w.output_fromNode(self)
+			self.value = activateFunc(put)
+		return self.value
 
 	def initInput(self, inval):
 		self.value = inval
-
-	def innerInput(self):
-		self.value = 0
-		for w in self.wire:
-			if w.nodes[1] == self:
-				self.value += w.nodes[0].output(self)
-		if self.state == "inner":
-			self.value = activateFunc(self.value)
 
 	def __cmp__(self, other):
 		return self.id - other.id
@@ -66,13 +65,27 @@ class Wire:
 	def setWeight(self, val):
 		self.w = val
 
-	def update(self, val):
-		self.w = self.w - rate * (val - output) * input
+	def update(self, sum):
+		n0 = self.nodes[0].value
+		n1 = self.nodes[1].value
+		
+		if self.nodes[0].state == "input":
+			#self.w = self.w - rate * (n1 - self.output()) * self.output()
+			self.w = self.w + eta * (n1 * (1 - n1) * sum) * n0 + rate * self.w
+		elif self.nodes[0].state == "inner":
+			#self.w = self.w - rate * (n1 - teach) * self.output()
+			self.w = self.w + eta * (n1 * (1 - n1) * (teach - n1)) * n0 + rate * self.w
 
-	def update2(self, val):
-		n1 = self.nodes[1]
-		n0 = self.nodes[0]
-		self.w = self.w - rate * (n0.value - n1.value * self.w) * n1.value
+	def back_output(self):
+		return self.nodes[1].value * self.w
+
+	def output(self):
+		return self.nodes[0].value * self.w
+
+	def output_fromNode(self, node):
+		if node.state == self.nodes[1].state:
+			return self.output()
+		return 0
 
 
 # function
@@ -83,8 +96,8 @@ def activateFunc(u):
 	except:
 		res = 0
 	return res
-	
-def updateNode(num):
+
+def dataInput(num):
 	f = openData("t10k-images.idx3-ubyte")
 	buf = f.read(16) # ヘッダ部分の読み込み
 	f.read(28*28*(num-1))
@@ -95,10 +108,19 @@ def updateNode(num):
 			n.initInput(data[0])
 
 	for n in nodes:
-		n.innerInput()
-	output = getLabel(num)
-	for n in nodes:
+		n.output()
+
+	for n in reversed(nodes):
 		n.update()
+
+	
+def updateNode(num):
+	dataInput(num)	
+	teach = getLabel(num)
+
+	for n in reversed(nodes):
+		n.update()
+
 	f.close()
 
 def getLabel(num):
@@ -113,29 +135,36 @@ def openData(filename):
 	#f.read(16) # ヘッダ部分の読み込み
 	return f
 
-def outputprint():
-	for n in nodes:
-		if n.id > (inputNum + innerNum):
-			print(n.id, n.value)
-			#for w in n.wire:
-			#	print(" ", " ", w.w)
-
+def outputprint(flag):
+	if flag == 0:
+		for w in wires:
+			if w.nodes[1].state == "output":
+				print(w.w)
+	elif flag == 1:
+		for n in nodes:
+			if n.id >= (inputNum + innerNum):
+				print(n.id, n.value)
+				
 
 # main
 
-input = 2
-outputNum = 4
-rate = 0.3
+
 inputRow = 28
 inputCol = 28
-layer = 3
 innerNum = 50
 inputNum = inputRow * inputCol
-output = 0
+outputNum = 1
 
-loopnum = 50
+rate = 0.03
+eta = 0.1
+teach = 0
+
+loopnum = 10
+
+debugFlag = 1
 
 nodes = []
+wires = []
 
 for i in range(inputNum + innerNum + outputNum):
 	n = Node(i)
@@ -159,14 +188,12 @@ for n in nodes:
 
 f.close()
 
-#for i in nodes:
-#for j in range(inputNum):
-#	i = nodes[j]
-#	print(i.id , i.state, i.value)
-	#for w in i.wire:
-	#	print("	",w.nodes[0].id, w.nodes[1].id)
-
 for i in range(loopnum):
 	print("loop " , i +1)
 	updateNode(1)
-	outputprint()
+	outputprint(debugFlag)
+
+
+print("")
+dataInput(2)
+outputprint(debugFlag)
