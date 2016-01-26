@@ -139,6 +139,9 @@ def result():
 			if n.state == "output":
 				print(i, n.value)
 
+def result_wire():
+    for e in wires:
+        print(e.nodes[0].id + " , " + e.nodes[1].id + " , " + e.w)
 
 # entry point
 
@@ -156,6 +159,6 @@ def main():
 		
 
 
-
-main()
-result()
+if __name__ == "__main__":
+    main()
+    result()
