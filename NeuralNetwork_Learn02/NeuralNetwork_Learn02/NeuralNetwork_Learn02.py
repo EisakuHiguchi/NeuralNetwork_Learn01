@@ -54,6 +54,7 @@ class node:
 			sum = 0
 			for w in wires:
 				if w.nodes[1].id == self.id:
+					print("w*x : " + str(self.id) + " " + str(w.output()) + "  w: " + str(w.w) + " x: " + str(w.nodes[0].value))
 					sum += w.output()
 			print("sum : " + str(self.id) + "  " + str(sum))
 			self.value = self.activateFunc(sum)
@@ -163,10 +164,10 @@ def debug_inout(teach_c):
 
 
 def debug_wirein(value):
-	cnt = value.count
 	c = 0
 	for w in wires:
 		w.w = value[c]
+		c += 1
 
 	
 
