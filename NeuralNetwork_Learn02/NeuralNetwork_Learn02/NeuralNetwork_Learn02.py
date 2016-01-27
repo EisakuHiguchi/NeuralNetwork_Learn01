@@ -6,7 +6,7 @@ hiddennum = 3
 outputnum = 1
 
 #teachnum = 20000 # loop num
-error = 0.001
+error = 0.1
 
 eta = 0.9 # learning rate
 alfa = 0.1 # innertia rate
@@ -49,6 +49,15 @@ class node:
 			if w.nodes[0].id == self.id:
 				w.w += alfa * w.nodes[1].modification(teach_c) * self.value
 
+	def output_debug(self):
+		if self.state != "input":
+			sum = 0
+			for w in wires:
+				if w.nodes[1].id == self.id:
+					sum += w.output()
+			print("sum : " + str(self.id) + "  " + str(sum))
+			self.value = self.activateFunc(sum)
+			print("act : " + str(self.id) + "  " + str(self.value))
 
 class wire:
 	def __init__(self, node1 , node2, **kwargs):
@@ -97,6 +106,18 @@ def input_output(teach_c):
 	for n in nodes:
 		n.output()
 
+def debug_input_output(teach_c):
+	cnt = 0
+	for n in nodes:
+		if n.state == "input":
+			n.input(input[teach_c][cnt])
+			cnt += 1
+			if cnt > 2:
+				cnt = 0
+
+	for n in nodes:
+		n.output_debug()
+
 def getError():
 	N = len(input)
 	temp = 0
@@ -141,6 +162,15 @@ def debug_inout(teach_c):
 	print("in " , input[teach_c] , " out ", nodes[len(nodes)-1].value , " Error " , getError())
 
 
+def debug_wirein(value):
+	cnt = value.count
+	c = 0
+	for w in wires:
+		w.w = value[c]
+
+	
+
+
 def result():
 	for i in range(len(teach)):
 		input_output(i)
@@ -150,7 +180,7 @@ def result():
 
 def result_wire():
     for e in wires:
-        print(e.nodes[0].id + " , " + e.nodes[1].id + " , " + e.w)
+        print(str(e.nodes[0].id) + " , " + str(e.nodes[1].id) + " , " + str(e.w))
 
 # entry point
 
@@ -176,3 +206,4 @@ def main():
 if __name__ == "__main__":
     main()
     result()
+    result_wire()
